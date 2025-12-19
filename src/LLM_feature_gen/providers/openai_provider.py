@@ -117,6 +117,7 @@ class OpenAIProvider:
         deployment_name: Optional[str] = None,
         feature_gen: bool = False,
         as_set: bool = False,
+        extra_context: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """
         For each base64 image, ask the LLM to extract features.
@@ -141,32 +142,34 @@ class OpenAIProvider:
                 "Respond in strict JSON with keys as feature names and values as concise strings."
             )
 
-        # ----------------------------
-        # NEW JOINT MODE
-        # ----------------------------
-        if as_set:
-            # one message with many images
-            user_content: List[Dict[str, Any]] = [{"type": "text", "text": base_prompt}]
-            for img_b64 in image_base64_list:
-                user_content.append({
+        def build_content(txt_prompt, b64_imgs, context_txt=None):
+            content = [{"type": "text", "text": txt_prompt}]
+
+            if context_txt:
+                content.append({
+                    "type": "text",
+                    "text": f"\n\nADDITIONAL CONTEXT (AUDIO TRANSCRIPT):\n{context_txt}\n\nAnalyze the visual frames below taking the transcript into account:"
+                })
+
+            for img_b64 in b64_imgs:
+                content.append({
                     "type": "image_url",
                     "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}
                 })
+            return content
 
+        # ----------------------------
+        # NEW JOINT MODE
+        # ----------------------------
+        if as_set or extra_context:
+            # one message with many images
+            user_content = build_content(base_prompt, image_base64_list, extra_context)
             out = self._chat_json(deployment, system_prompt, user_content)
-            # keep return type consistent with previous API: always a list
             return [out]
 
-        # ----------------------------
-        # OLD PER-IMAGE MODE
-        # ----------------------------
         results: List[Dict[str, Any]] = []
         for img_b64 in image_base64_list:
-            user_content: List[Dict[str, Any]] = [{"type": "text", "text": base_prompt}]
-            user_content.append({
-                "type": "image_url",
-                "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}
-            })
+            user_content = build_content(base_prompt, [img_b64], None)
             out = self._chat_json(deployment, system_prompt, user_content)
             results.append(out)
 

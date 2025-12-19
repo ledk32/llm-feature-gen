@@ -1,10 +1,10 @@
 # src/LLM_feature_gen/generate.py
 from __future__ import annotations
-
+from .utils.video import extract_key_frames, transcribe_video
 import os
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Tuple
 
 import pandas as pd
 from PIL import Image
@@ -23,6 +23,35 @@ except ImportError:  # pragma: no cover
 # ----------------------------
 # helpers
 # ----------------------------
+def _prepare_video_inputs(file_path: Path, use_audio: bool) -> Tuple[List[str], Optional[str]]:
+
+    transcript_context = None
+
+    # 1. Audio / Transcript
+    if use_audio:
+        raw_transcript = transcribe_video(str(file_path))
+        if raw_transcript and len(raw_transcript) > 10:
+            transcript_context = raw_transcript
+        else:
+            transcript_context = "No distinct speech detected."
+    else:
+        transcript_context = None
+
+    # 2. Visuals / Frames
+    b64_list = extract_key_frames(str(file_path), frame_limit=6)
+
+    if not b64_list:
+        print(f"Skipping video {file_path.name}: No frames extracted.")
+        return [], None
+
+    return b64_list, transcript_context
+
+
+def _prepare_image_inputs(file_path: Path) -> Tuple[List[str], Optional[str]]:
+    img = Image.open(file_path).convert("RGB")
+    b64_list = [image_to_base64(np.array(img))]
+    return b64_list, None
+
 def load_discovered_features(path: Union[str, Path]) -> Dict[str, Any]:
     path = Path(path)
     if not path.exists():
@@ -125,6 +154,7 @@ def assign_feature_values_from_folder(
     prompt_text: str,
     provider: Optional["OpenAIProvider"] = None,
     output_dir: Union[str, Path] = "outputs",
+    use_audio: bool = True,
 ) -> Path:
     """
     For each image in <folder_path>/<class_name>:
@@ -148,31 +178,44 @@ def assign_feature_values_from_folder(
 
     full_prompt = _build_prompt_for_generation(prompt_text, discovered_features)
 
-    image_files = [
-        f for f in os.listdir(class_folder)
-        if f.lower().endswith((".jpg", ".jpeg", ".png"))
-    ]
-    image_files.sort()
+    video_exts = {".mp4", ".mov", ".avi", ".mkv"}
+    image_exts = {".jpg", ".jpeg", ".png"}
+    all_exts = video_exts.union(image_exts)
+
+    files = [f for f in os.listdir(class_folder) if Path(f).suffix.lower() in all_exts]
+    files.sort()
 
     output_dir = _ensure_output_dir(output_dir)
     csv_path = output_dir / f"{class_name}_feature_values.csv"
 
-    iterator = image_files
+    iterator = files
     if tqdm is not None:
-        iterator = tqdm(image_files, desc=f"{class_name}", unit="img")
-
-    first_row_written = csv_path.exists()
+        iterator = tqdm(files, desc=f"{class_name}", unit="img")
 
     for idx, filename in enumerate(iterator):
-        img_path = class_folder / filename
-        img = Image.open(img_path).convert("RGB")
-        img_b64 = image_to_base64(np.array(img))
+        file_path = class_folder / filename
+        ext = file_path.suffix.lower()
 
-        llm_resp = provider.image_features(
-            image_base64_list=[img_b64],
-            prompt=full_prompt,
-        )
-        parsed = llm_resp
+        try:
+            if ext in video_exts:
+                b64_list, transcript_context = _prepare_video_inputs(file_path, use_audio)
+            else:
+                b64_list, transcript_context = _prepare_image_inputs(file_path)
+
+            if not b64_list:
+                continue
+
+            llm_resp = provider.image_features(
+                image_base64_list=b64_list,
+                prompt=full_prompt,
+                extra_context=transcript_context
+            )
+
+            parsed = llm_resp[0] if isinstance(llm_resp, list) and llm_resp else {}
+
+        except Exception as e:
+            print(f"Error processing {filename}: {e}")
+            continue
 
         # sometimes model returns {"features": "<json str>"}
         if isinstance(parsed, dict) and "features" in parsed and isinstance(parsed["features"], str):
@@ -255,6 +298,7 @@ def generate_features(
     provider: Optional[OpenAIProvider] = None,
     merge_to_single_csv: bool = False,
     merged_csv_name: str = "all_feature_values.csv",
+    use_audio: bool = True,
 ) -> Dict[str, str]:
     root_folder = Path(root_folder)
     provider = provider or OpenAIProvider()
@@ -280,6 +324,7 @@ def generate_features(
             prompt_text=prompt,
             provider=provider,
             output_dir=output_dir,
+            use_audio=use_audio,
         )
         csv_paths[cls] = str(csv_path)
 
@@ -297,4 +342,15 @@ def generate_features(
 
 
 def generate_features_from_images(*args, **kwargs) -> Dict[str, str]:
+    return generate_features(*args, **kwargs)
+
+
+def generate_features_from_videos(*args, **kwargs) -> Dict[str, str]:
+    """
+    Dedicated entry point for video processing.
+    Ensures use_audio is True by default unless explicitly disabled.
+    """
+    if 'use_audio' not in kwargs:
+        kwargs['use_audio'] = True
+
     return generate_features(*args, **kwargs)
