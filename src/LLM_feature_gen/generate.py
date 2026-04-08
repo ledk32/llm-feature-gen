@@ -482,7 +482,7 @@ def generate_features_from_images(*args, **kwargs) -> Dict[str, str]:
 
 def generate_features_from_videos(*args, **kwargs) -> Dict[str, str]:
     if "discovered_features_path" not in kwargs:
-        kwargs["discovered_features_path"] = "outputs/discovered_videos_features.json"
+        kwargs["discovered_features_path"] = "outputs/discovered_video_features.json"
 
     kwargs.setdefault("use_audio", True)
     return generate_features(*args, **kwargs)

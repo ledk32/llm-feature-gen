@@ -42,6 +42,9 @@ fail_under = 100
 show_missing = true
 skip_empty = true
 
+[tool.setuptools.package-dir]
+"" = "src"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 exclude = ["tests*"]
