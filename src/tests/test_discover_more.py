@@ -243,6 +243,35 @@ def test_discover_videos_handles_frame_errors_and_short_transcripts(tmp_path: Pa
     assert provider.calls[0]["extra_context"] is None
 
 
+def test_discover_videos_handles_audio_processing_failures(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    video_path = tmp_path / "audio_fail.mp4"
+    video_path.write_bytes(b"video")
+    audio_path = tmp_path / "audio_fail.wav"
+    audio_path.write_bytes(b"audio")
+
+    monkeypatch.setattr(discover_mod, "extract_key_frames", lambda path, frame_limit=5: ["frame-a", "frame-b"])
+    monkeypatch.setattr(discover_mod, "extract_audio_track", lambda path: str(audio_path))
+
+    class BrokenTranscriptProvider(ImageProvider):
+        def transcribe_audio(self, audio_path: str) -> str:
+            raise RuntimeError("transcription failed")
+
+    provider = BrokenTranscriptProvider()
+
+    result = discover_mod.discover_features_from_videos(
+        video_path,
+        provider=provider,
+        use_audio=True,
+        as_set=False,
+        output_dir=tmp_path / "audiofailout",
+    )
+
+    assert isinstance(result, list)
+    assert provider.calls[0]["images"] == ["frame-a", "frame-b"]
+    assert provider.calls[0]["extra_context"] is None
+    assert not audio_path.exists()
+
+
 def test_discover_tabular_supports_multiple_formats_and_validation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     folder = tmp_path / "tabular"
     folder.mkdir()
