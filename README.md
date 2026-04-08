@@ -1,78 +1,81 @@
-# llm-feature-gen
+# LLM Feature Gen
 
+**LLM Feature Gen** is a Python library for discovering and generating interpretable features from unstructured data with large language models.
 
+It helps you:
+- discover human-interpretable features from images, text, tabular data, and video
+- turn model outputs into structured JSON artifacts
+- generate feature values from raw multimodal inputs for downstream models
+- export per-class CSVs that are ready for analysis or modeling
 
-**LLM Feature Gen** is a Python library for **discovering and generating interpretable features** from unstructured data using Large Language Models (LLMs).  
-The library provides high-level utilities for:
-- Discovering human-interpretable features from sets of images,
-- Integrating prompts and model outputs into structured JSON representations,
-- Generating new feature representations automatically from raw multimodal data,
-e.g., creating structured tables for downstream models,
+## How It Works
 
+The library supports a two-step workflow:
 
----
+1. **Discover features** from a dataset and save them as JSON in `outputs/`.
+2. **Generate feature values** for each file or row using the discovered feature schema.
 
-## Module: `discover`
+## Supported Inputs
 
-The `discover` module focuses on **feature discovery** — identifying interpretable, discriminative visual or textual properties using an LLM.
+### Discovery
 
-Supported Data Types
-- Images (.jpg, .png)
-- Text documents (.txt, .pdf, .docx, .md, .html)
-- Tabular datasets (.csv, .xlsx, .parquet, .json)
-- Videos (.mp4)
+- Images: `.jpg`, `.jpeg`, `.png`
+- Text: `.txt`, `.md`, `.pdf`, `.docx`, `.html`
+- Tabular: `.csv`, `.xlsx`, `.xls`, `.parquet`, `.json`
+- Video: `.mp4`, `.mov`, `.avi`, `.mkv`
 
-### ✅ What it does
-Given a folder of images and a prompt, the library:
-1. Converts each image into Base64 format,  
-2. Sends them to an LLM,  
-3. Receives a structured JSON response describing the discovered features,  
-4. Automatically saves the output to a  JSON file in `outputs/`.
+### Generation
 
----
+- Images, text, tabular files, and videos are supported through the same folder-based pipeline.
+- Generation expects a root folder with one subfolder per class, for example `images/hotpot/` and `images/vase/`.
 
-## 📂 Project Structure
+### Optional Parser Dependencies
+
+The base install covers the core package, but some formats need extra packages at runtime:
+
+- `.pdf`: `pypdf`
+- `.docx`: `python-docx`
+- `.html`: `beautifulsoup4`
+- `.xlsx`: `openpyxl`
+- `.xls`: `xlrd`
+- `.parquet`: `pyarrow` or `fastparquet`
+
+For video audio extraction, you also need the `ffmpeg` system binary available on your machine.
+
+## Project Structure
+
 ```text
 llm-feature-gen/
 ├─ src/
-│  └─ llm_feature_gen/
-│     ├─ __init__.py
-│     ├─ discover.py                # High-level orchestration for feature discovery
-│     ├─ generate.py                # Feature value generation
-│     ├─ providers/
-│     │   ├─ openai_provider.py     # OpenAI / Azure OpenAI API wrapper
-│     │   └─ local_provider.py      # Local LLM wrapper
-│     ├─ prompts/
-│     │   ├─ image_discovery_prompt.txt
-│     │   ├─ text_discovery_prompt.txt
-│     │   ├─ image_generation_prompt.txt
-│     │   └─ text_generation_prompt.txt
-│     ├─ utils/
-│     │   ├─ image.py               # Image → base64 conversion
-│     │   ├─ video.py               # Video frame and audio extraction
-│     │   └─ text.py                # Text extraction (txt, pdf, docx, etc.)
-│     └─ tests/
-│        └─ test_discover.py
-├─ outputs/                         # Automatically generated feature JSONs
+│  ├─ llm_feature_gen/
+│  │  ├─ __init__.py
+│  │  ├─ discover.py
+│  │  ├─ generate.py
+│  │  ├─ providers/
+│  │  │  ├─ local_provider.py
+│  │  │  └─ openai_provider.py
+│  │  ├─ prompts/
+│  │  │  ├─ image_discovery_prompt.txt
+│  │  │  ├─ image_generation_prompt.txt
+│  │  │  ├─ text_discovery_prompt.txt
+│  │  │  └─ text_generation_prompt.txt
+│  │  └─ utils/
+│  │     ├─ image.py
+│  │     ├─ text.py
+│  │     └─ video.py
+│  └─ tests/
+│     ├─ conftest.py
+│     ├─ test_discover_more.py
+│     ├─ test_discovery.py
+│     ├─ test_generation.py
+│     ├─ test_providers.py
+│     └─ test_utils_and_prompts.py
+├─ outputs/
 ├─ pyproject.toml
 └─ README.md
 ```
 
----
-
-## ⚙️ Installation
-
-Clone or download the repository, then install in editable mode:
-
-```bash
-pip install -e .
-```
-
-For development and testing, use:
-
-```bash
-pip install -e ".[dev]"
-```
+## Installation
 
 Install from PyPI:
 
@@ -80,190 +83,200 @@ Install from PyPI:
 pip install llm-feature-gen
 ```
 
-## 🧪 Running Tests
+For local development:
 
-The project uses pytest. You don’t need external services (no network calls are made during tests), and heavy video tooling is stubbed out.
-
-Quick start from the repository root (Windows PowerShell shown, works similarly on macOS/Linux):
-
-```powershell
-# 1) (Recommended) Create and activate a virtual environment
+```bash
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1   # On macOS/Linux: source .venv/bin/activate
-
-# 2) Upgrade packaging tools in a fresh environment
-python -m pip install --upgrade pip setuptools wheel
-
-# 3) Install the package with dev dependencies
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
-
-# 4) Run the test suite
-pytest
 ```
 
-Useful commands:
-- Run a single test file:
-  ```powershell
-  pytest src\tests\test_discovery.py
-  ```
-- Run tests with verbose output:
-  ```powershell
-  pytest -vv
-  ```
+If you need non-core document or tabular formats:
 
-Notes:
-- Tests create and use temporary directories; they do not modify your repository files.
-- Video-related utilities are monkeypatched/stubbed in tests, so `ffmpeg` is not required to run the suite.
-- Environment variables for Azure OpenAI are not required for tests because a fake provider is used.
+```bash
+pip install pypdf python-docx beautifulsoup4 openpyxl xlrd pyarrow
+```
 
-## 🔑 Environment Setup for OpenAI API
+## Environment Setup
 
-Create a .env file in the project root
+Create a `.env` file in the project root.
 
-##  Example: Discover Features from Images
+### OpenAI API
+
+```env
+OPENAI_API_KEY=your_api_key
+OPENAI_MODEL=your_model_name
+OPENAI_AUDIO_MODEL=whisper-1
+```
+
+### Azure OpenAI
+
+```env
+AZURE_OPENAI_API_KEY=your_api_key
+AZURE_OPENAI_API_VERSION=your_api_version
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_GPT41_DEPLOYMENT_NAME=your_chat_deployment
+AZURE_OPENAI_WHISPER_DEPLOYMENT=your_audio_deployment
+```
+
+If `AZURE_OPENAI_ENDPOINT` is set, the provider automatically uses Azure OpenAI. Otherwise it falls back to the standard OpenAI API.
+
+## Discovery Examples
+
+### Discover Features from Images
+
 ```python
 from llm_feature_gen.discover import discover_features_from_images
-# Folder with your example images
-image_folder = "discover_images"
 
-# Run feature discovery
 result = discover_features_from_images(
-    image_paths_or_folder=image_folder,
-    as_set=True,  # analyze all images jointly
+    image_paths_or_folder="discover_images",
+    as_set=True,
 )
 
 print(result)
 ```
-This will:
-- Read all .jpg/.png images from discover_images/
-- the default prompt (prompts/image_discovery_prompt.txt)
-- Send them to your LLM provider
-- Save the results to outputs/discovered_image_features.json
 
-Example saved JSON:
+This reads all supported images in `discover_images/`, sends them as a joint set to the provider, and saves the result to `outputs/discovered_image_features.json`.
+
+Example output:
+
 ```json
 {
   "proposed_features": [
     {
       "feature": "has visible handle",
-      "description": "Some objects include handles, others do not.",
+      "description": "Some objects include handles, while others do not.",
       "possible_values": ["present", "absent"]
     },
     {
       "feature": "color tone",
-      "description": "Images vary between metallic and earthy color palettes.",
-      "possible_values": ["metallic", "matte", "bright", "dark"]
+      "description": "Objects vary between metallic, earthy, and bright palettes.",
+      "possible_values": ["metallic", "earthy", "bright", "dark"]
     }
   ]
 }
 ```
 
-##  Example: Discover Features from Texts
+### Discover Features from Text
+
 ```python
 from llm_feature_gen.discover import discover_features_from_texts
 
-# Folder with text documents (txt, pdf, docx, md, html)
-text_folder = "discover_texts"
-
-# Run feature discovery
 result = discover_features_from_texts(
-    texts_or_file=text_folder,
-    as_set=True,  # analyze all texts jointly
+    texts_or_file="discover_texts",
+    as_set=True,
 )
 
 print(result)
 ```
 
-This will:
-- Load all supported text files from discover_texts/,
-- Extract raw text automatically,
-- Use the default text discovery prompt,
-- Send them to your LLM provider,
-- Save the results to outputs/discovered_text_features.json.
+This loads all supported text documents in `discover_texts/`, extracts raw text, and saves the result to `outputs/discovered_text_features.json`.
 
-Example saved JSON:
+### Discover Features from Tabular Data
+
+```python
+from llm_feature_gen.discover import discover_features_from_tabular
+
+result = discover_features_from_tabular(
+    file_or_folder="discover_tabular",
+    text_column="text",
+    as_set=True,
+)
+
+print(result)
+```
+
+This loads supported tabular files, reads the `text` column, and saves the result to `outputs/discovered_tabular_features.json`.
+
+Example output:
+
 ```json
 {
   "proposed_features": [
     {
-      "feature": "presence_of_personal_experience",
-      "description": "Some texts describe personal experiences or reflections, while others are more impersonal or instructional.",
-      "possible_values": ["present", "absent"]
+      "feature": "overall sentiment",
+      "description": "Rows differ in whether they express favorable or unfavorable opinions.",
+      "possible_values": ["positive", "negative", "mixed"]
     },
     {
-      "feature": "level_of_subjectivity",
-      "description": "Texts vary in how subjective or opinion-based they are compared to neutral or factual descriptions.",
-      "possible_values": ["highly subjective", "moderately subjective", "objective"]
-    },
-    {
-      "feature": "use_of_first_person_perspective",
-      "description": "Some texts use first-person pronouns indicating a personal perspective, while others do not.",
-      "possible_values": ["first person", "third person or impersonal"]
-    },
-    {
-      "feature": "presence_of_explicit_goal_or_intent",
-      "description": "Texts may explicitly state an intended goal, motivation, or purpose behind actions or descriptions.",
-      "possible_values": ["goal stated", "goal not stated"]
+      "feature": "focus of the review",
+      "description": "Some rows focus on performance, others on plot, visuals, or general quality.",
+      "possible_values": ["performance", "plot", "visuals", "general quality"]
     }
   ]
 }
 ```
 
-##  Example: Discover Features from Tabular Data
+### Discover Features from Videos
+
 ```python
-from llm_feature_gen.discover import discover_features_from_tabular
+from llm_feature_gen.discover import discover_features_from_videos
 
-# Folder with tabular files (.csv, .xlsx, .parquet, .json)
-tabular_folder = "discover_tabular"
-
-# Run feature discovery
-result = discover_features_from_tabular(
-    file_or_folder=tabular_folder,
-    as_set=True,  # analyze all texts jointly
-    text_column="text",   # required: column containing raw text
+result = discover_features_from_videos(
+    videos_or_folder="discover_videos",
+    as_set=True,
+    num_frames=5,
+    use_audio=True,
 )
 
 print(result)
 ```
 
-This will:
-1. Load all supported tabular files from the folder discover_tabular/
-2. Extract the specified text_column
-3. Apply the standard text discovery prompt
-4. Save the output to outputs/discovered_tabular_features.json.
+This extracts key frames, optionally transcribes audio, and saves the result to `outputs/discovered_video_features.json`.
 
-Example saved JSON:
-```json
-{
-    "proposed_features": [
-      {
-        "feature": "overall sentiment",
-        "description": "The texts differ in expressing positive or negative feelings about the subject, which can separate favorable from unfavorable opinions.",
-        "possible_values": [
-          "positive",
-          "negative"
-        ]
-      },
-      {
-        "feature": "focus on emotional impact",
-        "description": "Some texts emphasize emotional responses or feelings evoked, distinguishing those that highlight emotional engagement from those that do not.",
-        "possible_values": [
-          "emotional emphasis",
-          "neutral or critical tone"
-        ]
-      },
-      {
-        "feature": "mention of specific artistic elements",
-        "description": "Certain texts reference particular components like acting, soundtrack, or visuals, which can differentiate detailed critiques from more general statements.",
-        "possible_values": [
-          "acting",
-          "story/plot",
-          "soundtrack",
-          "visuals",
-          "dialogue",
-          "character development",
-          "none"
-        ]
-      }
-      }
+## Generation Example
+
+After discovery, you can generate feature values for each class folder.
+
+```python
+from llm_feature_gen.generate import generate_features_from_images
+
+csv_paths = generate_features_from_images(
+    root_folder="images",
+    discovered_features_path="outputs/discovered_image_features.json",
+    merge_to_single_csv=True,
+)
+
+print(csv_paths)
 ```
+
+With a folder layout like this:
+
+```text
+images/
+├─ hotpot/
+└─ vase/
+```
+
+the command writes per-class CSVs such as `outputs/hotpot_feature_values.csv` and `outputs/vase_feature_values.csv`. If `merge_to_single_csv=True`, it also creates `outputs/all_feature_values.csv`.
+
+The same workflow is available for other modalities:
+
+```python
+from llm_feature_gen.generate import (
+    generate_features_from_images,
+    generate_features_from_tabular,
+    generate_features_from_texts,
+    generate_features_from_videos,
+)
+```
+
+## Running Tests
+
+From the repository root:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
+pytest
+```
+
+Useful commands:
+
+```bash
+pytest -vv
+pytest src/tests/test_discovery.py
+```
+
+Tests use fake providers and temporary directories, so they do not require OpenAI or Azure credentials.
