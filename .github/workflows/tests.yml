@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-22.04
     permissions:
       contents: read
+      id-token: write
     env:
       PYTHONPATH: src
     strategy:
@@ -37,3 +38,10 @@ jobs:
 
       - name: Run tests
         run: python -m pytest
+
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == '3.11'
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage.xml
+          use_oidc: true
