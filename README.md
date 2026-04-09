@@ -60,6 +60,8 @@ This creates `outputs/discovered_text_features.json`, one CSV per class folder, 
 
 If you want the fuller walkthrough, including provider switching and other modalities, see [the tutorial notebook](https://github.com/JuliaYershova/LLM-feature-gen/blob/main/tutorial.ipynb). If you are working from a repository checkout and want to use editable installs or the bundled sample folders, see the development setup below.
 
+If you want one polished, citeable example that runs end to end from raw inputs to a downstream classifier, see [`examples/text_to_tabular_pipeline.py`](examples/text_to_tabular_pipeline.py) and the accompanying [`examples/README.md`](examples/README.md). It defaults to the real configured provider stack and also includes an offline replay mode for reproducible tests.
+
 ## How It Works
 
 The library supports a two-step workflow:
@@ -135,6 +137,8 @@ Install from PyPI:
 ```bash
 pip install llm-feature-gen
 ```
+
+Supported Python versions and operating systems are documented in [SUPPORT.md](SUPPORT.md).
 
 ### Development
 

@@ -11,6 +11,21 @@ readme = "README.md"
 requires-python = ">=3.9"
 authors = [{ name = "Julija Jeršova" }]
 license = { text = "MIT" }
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: MacOS",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 urls = { Homepage = "https://github.com/JuliaYershova/LLM-feature-gen", Repository = "https://github.com/JuliaYershova/LLM-feature-gen", Issues = "https://github.com/JuliaYershova/LLM-feature-gen/issues", CI = "https://github.com/JuliaYershova/LLM-feature-gen/actions", Coverage = "https://codecov.io/gh/JuliaYershova/LLM-feature-gen" }
 dependencies = [
   "openai>=1.0.0",

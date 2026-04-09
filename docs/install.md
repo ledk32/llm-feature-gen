@@ -8,6 +8,8 @@ Install the published package:
 pip install llm-feature-gen
 ```
 
+Supported targets are summarized in the [platform support matrix](support.md).
+
 ## Development install
 
 If you are working from a repository checkout:

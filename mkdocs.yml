@@ -37,6 +37,7 @@ plugins:
 nav:
   - Overview: index.md
   - Install Guide: install.md
+  - Platform Support: support.md
   - Quickstart: quickstart.md
   - Provider Configuration: provider-configuration.md
   - Outputs and Schema: outputs-schema.md

@@ -4,6 +4,7 @@ recursive-include src *.txt
 include pyproject.toml
 include README.md
 include LICENSE
+recursive-include examples *
 
 # Exclude local data folders – these must never be bundled into the sdist
 prune discover_images
@@ -15,4 +16,3 @@ prune outputs
 prune tabular
 prune texts
 prune videos
-

@@ -1,0 +1,1 @@
+Barcode scanning is failing across the warehouse tablets, so shipments are stuck on the loading dock. We need an immediate fix to keep orders moving.

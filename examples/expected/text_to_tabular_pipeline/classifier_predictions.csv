@@ -1,0 +1,9 @@
+File,actual_class,predicted_class,correct
+invoice_copy.txt,routine,routine,True
+password_reset_status.txt,routine,routine,True
+return_window.txt,routine,routine,True
+tracking_update.txt,routine,routine,True
+admin_lockout.txt,urgent,urgent,True
+checkout_outage.txt,urgent,urgent,True
+duplicate_charge_deadline.txt,urgent,routine,False
+warehouse_scan_failure.txt,urgent,urgent,True

@@ -1,0 +1,55 @@
+[
+  {
+    "proposed_features": [
+      {
+        "feature": "urgency_level",
+        "type": "categorical",
+        "allowed_values": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "description": "Estimated urgency implied by the request wording."
+      },
+      {
+        "feature": "customer_tone",
+        "type": "categorical",
+        "allowed_values": [
+          "calm",
+          "concerned",
+          "frustrated"
+        ],
+        "description": "Emotional tone conveyed by the text."
+      },
+      {
+        "feature": "requested_action",
+        "type": "categorical",
+        "allowed_values": [
+          "information",
+          "refund",
+          "escalation",
+          "access_restore"
+        ],
+        "description": "Primary action the sender is asking the team to take."
+      },
+      {
+        "feature": "operational_impact",
+        "type": "categorical",
+        "allowed_values": [
+          "personal_inconvenience",
+          "business_critical"
+        ],
+        "description": "Whether the issue appears to block broader operations."
+      },
+      {
+        "feature": "mentions_deadline",
+        "type": "categorical",
+        "allowed_values": [
+          "yes",
+          "no"
+        ],
+        "description": "Whether the sender references a concrete time constraint."
+      }
+    ]
+  }
+]

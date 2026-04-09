@@ -1,0 +1,22 @@
+{
+  "model": "leave_one_out_nearest_centroid",
+  "feature_columns": [
+    "urgency_level",
+    "customer_tone",
+    "requested_action",
+    "operational_impact",
+    "mentions_deadline"
+  ],
+  "num_examples": 8,
+  "accuracy": 0.875,
+  "confusion_matrix": {
+    "routine": {
+      "routine": 4,
+      "urgent": 0
+    },
+    "urgent": {
+      "routine": 1,
+      "urgent": 3
+    }
+  }
+}
