@@ -11,6 +11,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 authors = [{ name = "Julija Jeršova" }]
 license = { text = "MIT" }
+urls = { Homepage = "https://github.com/JuliaYershova/LLM-feature-gen", Repository = "https://github.com/JuliaYershova/LLM-feature-gen", Issues = "https://github.com/JuliaYershova/LLM-feature-gen/issues", CI = "https://github.com/JuliaYershova/LLM-feature-gen/actions", Coverage = "https://codecov.io/gh/JuliaYershova/LLM-feature-gen" }
 dependencies = [
   "openai>=1.0.0",
   "python-dotenv>=1.0.0",
@@ -31,7 +32,7 @@ dev = [
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = ["src/tests"]
-addopts = "--cov=llm_feature_gen --cov-report=term-missing"
+addopts = "--cov=llm_feature_gen --cov-report=term-missing --cov-report=xml"
 
 [tool.coverage.run]
 branch = true

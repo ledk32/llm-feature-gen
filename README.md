@@ -1,5 +1,7 @@
 # LLM Feature Gen
 
+[![Coverage](https://codecov.io/gh/JuliaYershova/LLM-feature-gen/branch/main/graph/badge.svg)](https://codecov.io/gh/JuliaYershova/LLM-feature-gen)
+
 **LLM Feature Gen** is a Python library for discovering and generating interpretable features from unstructured data with large language models.
 
 It helps you:
