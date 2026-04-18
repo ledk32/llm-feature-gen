@@ -206,26 +206,29 @@ class LocalProvider:
                         if isinstance(extracted, list):
                             return {"features": extracted}
                         return extracted
+                    if json_mode:
+                        raise ValueError(f"Invalid JSON response: {text}")
                     return {"features": text}
 
             except BadRequestError as e:
                 # Fallback if model doesn't support json_mode
                 if json_mode and "json_object" in str(e):
                     json_mode = False
+                    kwargs.pop("response_format", None)
                     continue
-                return {"error": str(e)}
+                raise e
 
-            except openai.RateLimitError:
+            except openai.RateLimitError as e:
                 if attempt < self.max_retries - 1:
                     time.sleep(backoff)
                     backoff *= 2
                     continue
-                return {"error": "Rate limit exceeded."}
+                raise e
 
             except Exception as e:
-                return {"error": str(e)}
+                raise e
 
-        return {"error": "Unknown failure"}
+        raise RuntimeError("Unknown failure: unable to get response.")
 
     # -----------------------
     # Public APIs
@@ -342,7 +345,7 @@ class LocalProvider:
         Transcribes audio file using local Faster-Whisper.
         """
         if not HAS_LOCAL_WHISPER:
-            return "Error: faster-whisper not installed."
+            raise ImportError("Error: faster-whisper not installed.")
 
         # Lazy loading
         if self._whisper_model is None:
@@ -357,10 +360,10 @@ class LocalProvider:
                     compute_type=compute_type,
                 )
             except Exception as e:
-                return f"Whisper initialization failed: {e}"
+                raise RuntimeError(f"Whisper initialization failed: {e}") from e
 
         try:
             segments, _ = self._whisper_model.transcribe(audio_path, beam_size=5)
             return " ".join(s.text for s in segments).strip()
         except Exception as e:
-            return f"Transcription failed: {e}"
+            raise RuntimeError(f"Transcription failed: {e}") from e
